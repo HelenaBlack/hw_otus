@@ -23,6 +23,7 @@ linters-settings:
         allow:
           - $gostd
           - github.com/stretchr/testify
+          - golang.org/x/example/hello
 issues:
   exclude-rules:
     - path: _test\.go
