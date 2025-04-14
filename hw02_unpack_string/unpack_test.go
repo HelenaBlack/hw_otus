@@ -1,4 +1,4 @@
-package hw02unpackstring
+package main
 
 import (
 	"errors"
@@ -18,6 +18,8 @@ func TestUnpack(t *testing.T) {
 		{input: "aaa0b", expected: "aab"},
 		{input: "🙃0", expected: ""},
 		{input: "aaф0b", expected: "aab"},
+		{input: "🙃4", expected: "🙃🙃🙃🙃"},
+		{input: "\n3", expected: "\n\n\n"},
 		// uncomment if task with asterisk completed
 		// {input: `qwe\4\5`, expected: `qwe45`},
 		// {input: `qwe\45`, expected: `qwe44444`},
