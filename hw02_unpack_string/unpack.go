@@ -12,30 +12,16 @@ func Unpack(input string) (string, error) {
 	if input == "" {
 		return "", nil
 	}
+
 	var result []rune
 	var preRune rune
 	escaped := false
 
 	for _, r := range input {
-		if unicode.IsDigit(preRune) {
-			return "", ErrInvalidString
-		}
-
 		if unicode.IsDigit(r) {
-			if preRune == 0 || escaped {
-				return "", ErrInvalidString
+			if err := handleDigits(r, &result, preRune, &escaped); err != nil {
+				return "", err
 			}
-
-			count, _ := strconv.Atoi(string(r))
-			if count == 0 {
-				result = result[:len(result)-1]
-			} else {
-				for j := 0; j < count-1; j++ {
-					result = append(result, preRune)
-				}
-			}
-
-			escaped = false
 		} else {
 			if r == '\\' && !escaped {
 				escaped = true
@@ -49,5 +35,29 @@ func Unpack(input string) (string, error) {
 	if escaped {
 		return "", ErrInvalidString
 	}
+
 	return string(result), nil
+}
+
+func handleDigits(r rune, result *[]rune, preRune rune, escaped *bool) error {
+	if unicode.IsDigit(preRune) {
+		return ErrInvalidString
+	}
+
+	if preRune == 0 || *escaped {
+		return ErrInvalidString
+	}
+
+	count, _ := strconv.Atoi(string(r))
+	if count == 0 {
+		*result = (*result)[:len(*result)-1]
+	} else {
+		for j := 0; j < count-1; j++ {
+			*result = append(*result, preRune)
+		}
+	}
+
+	*escaped = false
+
+	return nil
 }
