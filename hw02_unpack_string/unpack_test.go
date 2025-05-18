@@ -26,8 +26,8 @@ func TestUnpack(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
-		t.Run(tc.input, func(t *testing.T) {
+		tc1 := tc
+		t.Run(tc1.input, func(t *testing.T) {
 			result, err := Unpack(tc.input)
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, result)
