@@ -1,6 +1,7 @@
 package hw03frequencyanalysis
 
 import (
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -10,11 +11,22 @@ type WordCount struct {
 	Count int
 }
 
-func Top10(text string) []string {
+func Top10(text string, isAsterisk bool) []string {
 	items := strings.Fields(text)
+
+	if isAsterisk {
+		re := regexp.MustCompile(`\p{P}+$`)
+		for i, item := range items {
+			item = strings.ToLower(item)
+			items[i] = re.ReplaceAllString(item, "")
+		}
+	}
 
 	wordsMap := make(map[string]int)
 	for _, item := range items {
+		if item == "" {
+			continue
+		}
 		wordsMap[item]++
 	}
 	wordCounts := make([]WordCount, 0, len(wordsMap))
