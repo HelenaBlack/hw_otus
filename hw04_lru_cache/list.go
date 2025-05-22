@@ -37,6 +37,7 @@ func (l *list) Front() *ListItem {
 func (l *list) Back() *ListItem {
 	return l.back
 }
+
 func (l *list) PushFront(v interface{}) *ListItem {
 	newItem := &ListItem{Value: v}
 	if l.len == 0 {
@@ -64,6 +65,7 @@ func (l *list) PushBack(v interface{}) *ListItem {
 	l.len++
 	return newItem
 }
+
 func (l *list) Remove(i *ListItem) {
 	if i.Prev != nil {
 		i.Prev.Next = i.Next
