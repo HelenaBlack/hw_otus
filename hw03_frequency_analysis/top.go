@@ -11,15 +11,13 @@ type WordCount struct {
 	Count int
 }
 
-func Top10(text string, isAsterisk bool) []string {
+func Top10(text string) []string {
 	items := strings.Fields(text)
 
-	if isAsterisk {
-		re := regexp.MustCompile(`\p{P}+$`)
-		for i, item := range items {
-			item = strings.ToLower(item)
-			items[i] = re.ReplaceAllString(item, "")
-		}
+	re := regexp.MustCompile(`\p{P}+$`)
+	for i, item := range items {
+		item = strings.ToLower(item)
+		items[i] = re.ReplaceAllString(item, "")
 	}
 
 	wordsMap := make(map[string]int)
