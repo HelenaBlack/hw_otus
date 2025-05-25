@@ -60,7 +60,7 @@ func TestCache(t *testing.T) {
 		require.False(t, isExist)
 	})
 
-	t.Run("test test", func(t *testing.T) {
+	t.Run("test item from the cache", func(t *testing.T) {
 		c := NewCache(3)
 		c.Set("aaa", 100)
 		c.Set("bbb", 200)
@@ -69,6 +69,29 @@ func TestCache(t *testing.T) {
 		c.Set("ddd", 444)
 
 		_, ok := c.Get("aaa")
+		require.False(t, ok)
+	})
+
+	t.Run("test old item from the cache", func(t *testing.T) {
+		c := NewCache(3)
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+		c.Set("ccc", 333)
+
+		_, ok := c.Get("bbb")
+		require.True(t, ok)
+
+		_, ok = c.Get("aaa")
+		require.True(t, ok)
+
+		c.Set("aaa", 888)
+		val, ok := c.Get("aaa")
+		require.True(t, ok)
+		require.Equal(t, 888, val)
+
+		c.Set("ddd", 444)
+
+		_, ok = c.Get("ccc")
 		require.False(t, ok)
 	})
 }

@@ -7,10 +7,11 @@ type Cache interface {
 	Get(key Key) (interface{}, bool)
 	Clear()
 }
-
+type CacheItem struct {
+	key   Key
+	value interface{}
+}
 type lruCache struct {
-	Cache // Remove me after realization.
-
 	capacity int
 	queue    List
 	items    map[Key]*ListItem
@@ -25,30 +26,33 @@ func NewCache(capacity int) Cache {
 }
 
 func (l *lruCache) Set(key Key, value interface{}) bool {
-	el, exist := l.items[key]
+	item, exist := l.items[key]
 	if exist {
-		l.queue.MoveToFront(el)
-		el.Value = value
+		cacheItem := item.Value.(*CacheItem)
+		cacheItem.value = value
+		l.queue.MoveToFront(item)
 		return true
 	}
 
 	if l.queue.Len() >= l.capacity {
-		lru := l.queue.Back()
-		l.queue.Remove(lru)
-		delete(l.items, lru.Value.(Key))
+		lastItem := l.queue.Back()
+		lastCacheItem := lastItem.Value.(*CacheItem)
+		delete(l.items, lastCacheItem.key)
+		l.queue.Remove(lastItem)
 	}
-
-	newItem := l.queue.PushFront(value)
+	newCacheItem := &CacheItem{key: key, value: value}
+	newItem := l.queue.PushFront(newCacheItem)
 	l.items[key] = newItem
 
 	return false
 }
 
 func (l *lruCache) Get(key Key) (interface{}, bool) {
-	el, exist := l.items[key]
+	item, exist := l.items[key]
 	if exist {
-		l.queue.MoveToFront(el)
-		return el.Value, true
+		l.queue.MoveToFront(item)
+		cacheItem := item.Value.(*CacheItem)
+		return cacheItem.value, true
 	}
 	return nil, false
 }
