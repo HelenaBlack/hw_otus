@@ -5,17 +5,18 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app"
-	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/configs"
+	config "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/configs"
 	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/logger"
 	internalhttp "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/server/http"
 	memorystorage "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/memory"
 	sqlstorage "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/sql"
 	"github.com/pressly/goose/v3"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 var configFile string

@@ -2,9 +2,10 @@ package memorystorage
 
 import (
 	"context"
+	"sync"
+
 	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app"
 	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage"
-	"sync"
 )
 
 type Storage struct {
@@ -18,7 +19,7 @@ func New() *Storage {
 	}
 }
 
-func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
+func (s *Storage) CreateEvent(_ context.Context, event storage.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

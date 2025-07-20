@@ -2,14 +2,14 @@ package memorystorage
 
 import (
 	"context"
-	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app"
-	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage"
+	"errors"
 	"sync"
 	"testing"
+
+	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app"
+	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage"
 )
 
-// TestStorageCRUD тестирует основные операции CRUD (Create, Read, Update, Delete)
-// Проверяет создание, чтение, обновление, удаление и листинг событий
 func TestStorageCRUD(t *testing.T) {
 	s := New()
 	ctx := context.Background()
@@ -53,8 +53,6 @@ func TestStorageCRUD(t *testing.T) {
 	}
 }
 
-// TestStorageErrDateBusy тестирует бизнес-логику проверки занятости времени
-// Проверяет, что нельзя создать два события с одинаковым временем для одного пользователя
 func TestStorageErrDateBusy(t *testing.T) {
 	s := New()
 	ctx := context.Background()
@@ -65,13 +63,12 @@ func TestStorageErrDateBusy(t *testing.T) {
 		t.Fatalf("CreateEvent failed: %v", err)
 	}
 
-	if err := s.CreateEvent(ctx, e2); err != app.ErrDateBusy {
+	err := s.CreateEvent(ctx, e2)
+	if !errors.Is(err, app.ErrDateBusy) {
 		t.Fatalf("expected ErrDateBusy, got %v", err)
 	}
 }
 
-// TestStorageConcurrency тестирует потокобезопасность хранилища
-// Проверяет, что хранилище корректно работает при одновременном доступе из нескольких горутин
 func TestStorageConcurrency(t *testing.T) {
 	s := New()
 	ctx := context.Background()

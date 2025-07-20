@@ -2,7 +2,6 @@ module github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar
 
 go 1.23.0
 
-toolchain go1.24.2
 
 require (
 	github.com/google/uuid v1.6.0

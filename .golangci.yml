@@ -17,6 +17,17 @@ linters-settings:
         allow:
           - $gostd
           - golang.org/x/example/hello
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/logger
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/configs
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/server/http
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/memory
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/sql
+          - github.com/google/uuid
+          - github.com/pressly/goose/v3
+          - gopkg.in/yaml.v2
+          - github.com/jmoiron/sqlx
       Test:
         files:
           - $test
@@ -24,6 +35,12 @@ linters-settings:
           - $gostd
           - github.com/stretchr/testify
           - golang.org/x/example/hello
+          - github.com/pressly/goose/v3
+          - github.com/lib/pq
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage
+
+
 issues:
   exclude-rules:
     - path: _test\.go

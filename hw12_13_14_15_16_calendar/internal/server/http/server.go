@@ -23,13 +23,13 @@ type Logger interface {
 }
 
 type Application interface {
+	// TODO
 }
 
-// NewServer создает новый HTTP-сервер с настроенными маршрутами и middleware
 func NewServer(logger Logger, app Application, host string, port int) *Server {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/hello", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprintln(w, "hello world")
 	})
 
@@ -58,8 +58,6 @@ func (s *Server) Start(ctx context.Context) error {
 	return s.httpSrv.ListenAndServe()
 }
 
-// Stop останавливает HTTP-сервер с graceful shutdown
-// Дает серверу время на завершение обработки текущих запросов
 func (s *Server) Stop(ctx context.Context) error {
 	ctxTimeout, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()

@@ -7,9 +7,6 @@ import (
 	"time"
 )
 
-// loggingMiddleware создает middleware для логирования HTTP-запросов.
-// Логирует IP клиента, время запроса, метод, путь, версию HTTP, код ответа,
-// время обработки запроса и User-Agent.
 func loggingMiddleware(logger Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -47,13 +44,11 @@ func loggingMiddleware(logger Logger) func(http.Handler) http.Handler {
 	}
 }
 
-// responseWriter оборачивает http.ResponseWriter для получения статус-кода ответа
 type responseWriter struct {
 	http.ResponseWriter
 	statusCode int // сохраняем статус-код для логирования
 }
 
-// WriteHeader переопределяет метод для сохранения статус-кода
 func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)

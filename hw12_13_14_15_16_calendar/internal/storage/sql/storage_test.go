@@ -3,13 +3,12 @@ package sqlstorage
 import (
 	"context"
 	"database/sql"
-	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	_ "github.com/lib/pq"
+	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage"
 	"github.com/pressly/goose/v3"
 )
 
@@ -22,6 +21,7 @@ func getTestDSN() string {
 }
 
 func setupTestStorage(t *testing.T) *Storage {
+	t.Helper() // Указываем, что это вспомогательная функция
 	dsn := getTestDSN()
 	// Автоматически применяем миграции к тестовой базе
 	db, err := sql.Open("postgres", dsn)
