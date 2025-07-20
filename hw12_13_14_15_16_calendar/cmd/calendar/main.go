@@ -2,22 +2,29 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"flag"
+	"fmt"
+	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app"
+	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/configs"
+	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/server/http"
+	memorystorage "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/sql"
+	"github.com/pressly/goose/v3"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
 )
 
 var configFile string
 
+var migrationsPath string
+
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "configs/config.yaml", "Path to configuration file")
+	flag.StringVar(&migrationsPath, "migrations", "migrations", "Path to migrations directory")
 }
 
 func main() {
@@ -28,13 +35,36 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
+	configData, err := config.NewConfigFromFile(configFile)
+	if err != nil {
+		panic("failed to load config: " + err.Error())
+	}
 
-	storage := memorystorage.New()
+	logg := logger.New(configData.Logger.Level)
+
+	var storage app.Storage
+	switch configData.Storage.Type {
+	case "memory":
+		storage = memorystorage.New()
+	case "sql":
+		dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			configData.DB.Host, configData.DB.Port, configData.DB.User, configData.DB.Password, configData.DB.DBName)
+
+		if err := runMigrations(dsn); err != nil {
+			panic("failed to apply migrations: " + err.Error())
+		}
+
+		storage, err = sqlstorage.New(dsn)
+		if err != nil {
+			panic("failed to connect to db: " + err.Error())
+		}
+	default:
+		panic("unknown storage type: " + configData.Storage.Type)
+	}
+
 	calendar := app.New(logg, storage)
 
-	server := internalhttp.NewServer(logg, calendar)
+	server := internalhttp.NewServer(logg, calendar, configData.Server.Host, configData.Server.Port)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -58,4 +88,30 @@ func main() {
 		cancel()
 		os.Exit(1) //nolint:gocritic
 	}
+}
+
+func runMigrations(dsn string) error {
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = db.Close() }()
+
+	fmt.Printf("DSN: %s\n", dsn)
+	fmt.Printf("Migrations path: %s\n", migrationsPath)
+
+	files, err := os.ReadDir(migrationsPath)
+	if err != nil {
+		fmt.Printf("Error reading migrations directory: %v\n", err)
+	} else {
+		fmt.Printf("Files in migrations directory:\n")
+		for _, file := range files {
+			fmt.Printf("  - %s\n", file.Name())
+		}
+	}
+
+	if err := goose.Up(db, migrationsPath); err != nil {
+		return err
+	}
+	return nil
 }
