@@ -70,6 +70,7 @@ func TestRun(t *testing.T) {
 		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
 	})
 }
+
 func TestRunCases(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
