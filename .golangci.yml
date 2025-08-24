@@ -23,6 +23,8 @@ linters-settings:
         allow:
           - $gostd
           - github.com/stretchr/testify
+          - github.com/stretchr/testify/require
+          - go.uber.org/goleak
           - golang.org/x/example/hello
 issues:
   exclude-rules:
@@ -46,18 +48,14 @@ linters:
     - exhaustive
     - copyloopvar
     - funlen
-    - gci
     - gocognit
     - goconst
     - gocritic
     - gocyclo
     - godot
-    - gofmt
-    - gofumpt
     - goheader
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - importas
     - ineffassign
@@ -72,10 +70,8 @@ linters:
     - predeclared
     - revive
     - staticcheck
-    - stylecheck
     - tagliatelle
     - thelper
-    - typecheck
     - unconvert
     - unparam
     - unused

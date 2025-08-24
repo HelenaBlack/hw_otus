@@ -15,28 +15,30 @@ import (
 func TestRun(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
-	t.Run("if were errors in first M tasks, than finished not more N+M tasks", func(t *testing.T) {
-		tasksCount := 50
-		tasks := make([]Task, 0, tasksCount)
+	t.Run("if were errors in first M tasks, than finished not more N+M tasks",
+		func(t *testing.T) {
+			tasksCount := 50
+			tasks := make([]Task, 0, tasksCount)
 
-		var runTasksCount int32
+			var runTasksCount int32
 
-		for i := 0; i < tasksCount; i++ {
-			err := fmt.Errorf("error from task %d", i)
-			tasks = append(tasks, func() error {
-				time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
-				atomic.AddInt32(&runTasksCount, 1)
-				return err
-			})
-		}
+			for i := 0; i < tasksCount; i++ {
+				err := fmt.Errorf("error from task %d", i)
+				tasks = append(tasks, func() error {
+					time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
+					atomic.AddInt32(&runTasksCount, 1)
+					return err
+				})
+			}
 
-		workersCount := 10
-		maxErrorsCount := 23
-		err := Run(tasks, workersCount, maxErrorsCount)
+			workersCount := 10
+			maxErrorsCount := 23
+			err := Run(tasks, workersCount, maxErrorsCount)
 
-		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
-		require.LessOrEqual(t, runTasksCount, int32(workersCount+maxErrorsCount), "extra tasks were started")
-	})
+			require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
+			require.LessOrEqual(t, runTasksCount, int32(workersCount)+int32(maxErrorsCount),
+				"extra tasks were started")
+		})
 
 	t.Run("tasks without errors", func(t *testing.T) {
 		tasksCount := 50
@@ -66,5 +68,51 @@ func TestRun(t *testing.T) {
 
 		require.Equal(t, runTasksCount, int32(tasksCount), "not all tasks were completed")
 		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
+	})
+}
+func TestRunCases(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	t.Run("single worker with multiple errors", func(t *testing.T) {
+		tasksCount := 10
+		tasks := make([]Task, 0, tasksCount)
+
+		var runTasksCount int32
+
+		for i := 0; i < tasksCount; i++ {
+			tasks = append(tasks, func() error {
+				atomic.AddInt32(&runTasksCount, 1)
+				return errors.New("task error")
+			})
+		}
+
+		workersCount := 1
+		maxErrorsCount := 3
+		err := Run(tasks, workersCount, maxErrorsCount)
+
+		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
+		require.LessOrEqual(t, runTasksCount, int32(workersCount)+int32(maxErrorsCount),
+			"extra tasks were started")
+	})
+
+	t.Run("all tasks successful with exact error limit", func(t *testing.T) {
+		tasksCount := 15
+		tasks := make([]Task, 0, tasksCount)
+
+		var runTasksCount int32
+
+		for i := 0; i < tasksCount; i++ {
+			tasks = append(tasks, func() error {
+				atomic.AddInt32(&runTasksCount, 1)
+				return nil
+			})
+		}
+
+		workersCount := 4
+		maxErrorsCount := 5 // Но ошибок нет, поэтому лимит не должен сработать
+		err := Run(tasks, workersCount, maxErrorsCount)
+
+		require.NoError(t, err)
+		require.Equal(t, int32(tasksCount), runTasksCount, "all tasks should be completed")
 	})
 }
