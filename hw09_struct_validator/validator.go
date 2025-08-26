@@ -107,55 +107,70 @@ func validateField(fieldName string, fieldValue reflect.Value, tag string) error
 		}
 
 		var err error
-
+		//nolint:exhaustive // default ветка обрабатывает все остальные случаи
 		switch fieldValue.Kind() {
 		case reflect.String:
-			err = validateString(fieldValue.String(), rule)
-			if err != nil {
-				if isDeveloperError(err) {
-					return err
-				}
-				validationErrors = append(validationErrors, ValidationError{
-					Field: fieldName,
-					Err:   err,
-				})
-			}
+			err = validateStringField(fieldName, fieldValue, rule)
 		case reflect.Int:
-			err = validateInt(int(fieldValue.Int()), rule)
-			if err != nil {
-				if isDeveloperError(err) {
-					return err
-				}
-				validationErrors = append(validationErrors, ValidationError{
-					Field: fieldName,
-					Err:   err,
-				})
-			}
+			err = validateIntField(fieldName, fieldValue, rule)
 		case reflect.Slice:
-			err = validateSlice(fieldName, fieldValue, rule)
-			if err != nil {
-				if isDeveloperError(err) {
-					return err
-				}
-				var valErrs ValidationErrors
-				if errors.As(err, &valErrs) {
-					validationErrors = append(validationErrors, valErrs...)
-				} else {
-					validationErrors = append(validationErrors, ValidationError{
-						Field: fieldName,
-						Err:   err,
-					})
-				}
-			}
+			err = validateSliceField(fieldName, fieldValue, rule)
 		default:
 			return fmt.Errorf("%w: unsupported field type %s", ErrInvalidTag, fieldValue.Kind())
+		}
+
+		if err != nil {
+			if isDeveloperError(err) {
+				return err
+			}
+			var valErrs ValidationErrors
+			if errors.As(err, &valErrs) {
+				validationErrors = append(validationErrors, valErrs...)
+			} else {
+				validationErrors = append(validationErrors, ValidationError{
+					Field: fieldName,
+					Err:   err,
+				})
+			}
 		}
 	}
 
 	if len(validationErrors) > 0 {
 		return validationErrors
 	}
+	return nil
+}
 
+func validateStringField(fieldName string, fieldValue reflect.Value, rule string) error {
+	err := validateString(fieldValue.String(), rule)
+	if err != nil {
+		if isDeveloperError(err) {
+			return err
+		}
+		return ValidationErrors{{Field: fieldName, Err: err}}
+	}
+	return nil
+}
+
+func validateIntField(fieldName string, fieldValue reflect.Value, rule string) error {
+	err := validateInt(int(fieldValue.Int()), rule)
+	if err != nil {
+		if isDeveloperError(err) {
+			return err
+		}
+		return ValidationErrors{{Field: fieldName, Err: err}}
+	}
+	return nil
+}
+
+func validateSliceField(fieldName string, fieldValue reflect.Value, rule string) error {
+	err := validateSlice(fieldName, fieldValue, rule)
+	if err != nil {
+		if isDeveloperError(err) {
+			return err
+		}
+		return err
+	}
 	return nil
 }
 
@@ -264,7 +279,7 @@ func validateSlice(fieldName string, sliceValue reflect.Value, rule string) erro
 	for i := 0; i < sliceValue.Len(); i++ {
 		elem := sliceValue.Index(i)
 		var err error
-
+		//nolint:exhaustive // default ветка обрабатывает все остальные случаи
 		switch elem.Kind() {
 		case reflect.String:
 			err = validateString(elem.String(), rule)
