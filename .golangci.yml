@@ -23,6 +23,8 @@ linters-settings:
         allow:
           - $gostd
           - github.com/stretchr/testify
+          - github.com/stretchr/testify/require
+          - go.uber.org/goleak
           - golang.org/x/example/hello
 issues:
   exclude-rules:
@@ -80,3 +82,4 @@ linters:
     - unparam
     - unused
     - whitespace
+
