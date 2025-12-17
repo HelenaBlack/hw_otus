@@ -145,6 +145,94 @@ func TestAllStageStop(t *testing.T) {
 		wg.Wait()
 
 		require.Len(t, result, 0)
-
 	})
+}
+
+func TestEmptyPipeline(t *testing.T) {
+	t.Run("no stages", func(t *testing.T) {
+		in := make(Bi)
+		data := []int{1, 2, 3}
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		result := make([]int, 0, 3)
+		for s := range ExecutePipeline(in, nil) {
+			result = append(result, s.(int))
+		}
+
+		require.Equal(t, []int{1, 2, 3}, result)
+	})
+
+	t.Run("empty input", func(t *testing.T) {
+		in := make(Bi)
+		close(in) // Немедленно закрываем входной канал
+
+		stages := []Stage{
+			func(in In) Out {
+				out := make(Bi)
+				go func() {
+					defer close(out)
+					for v := range in {
+						out <- v
+					}
+				}()
+				return out
+			},
+		}
+
+		result := make([]interface{}, 0)
+		for s := range ExecutePipeline(in, nil, stages...) {
+			result = append(result, s)
+		}
+
+		require.Empty(t, result)
+	})
+}
+
+func TestPipelineBufferedChannels(t *testing.T) {
+	in := make(Bi, 5)
+
+	for i := 1; i <= 5; i++ {
+		in <- i
+	}
+	close(in)
+
+	stages := []Stage{
+		func(in In) Out {
+			out := make(Bi, 3) // Стадия с буферизованным выходом
+			go func() {
+				defer close(out)
+				for v := range in {
+					out <- v.(int) * 10
+				}
+			}()
+			return out
+		},
+		func(in In) Out {
+			out := make(Bi)
+			go func() {
+				defer close(out)
+				for v := range in {
+					out <- v.(int) + 1
+				}
+			}()
+			return out
+		},
+	}
+
+	result := make([]int, 0)
+	start := time.Now()
+	for s := range ExecutePipeline(in, nil, stages...) {
+		result = append(result, s.(int))
+	}
+	elapsed := time.Since(start)
+
+	require.Equal(t, []int{11, 21, 31, 41, 51}, result)
+
+	require.Less(t, elapsed, sleepPerStage*3)
 }
