@@ -49,8 +49,50 @@ func TestCache(t *testing.T) {
 		require.Nil(t, val)
 	})
 
-	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+	t.Run("test clear", func(t *testing.T) {
+		c := NewCache(3)
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+
+		c.Clear()
+
+		_, isExist := c.Get("aaa")
+		require.False(t, isExist)
+	})
+
+	t.Run("test item from the cache", func(t *testing.T) {
+		c := NewCache(3)
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+		c.Set("ccc", 333)
+
+		c.Set("ddd", 444)
+
+		_, ok := c.Get("aaa")
+		require.False(t, ok)
+	})
+
+	t.Run("test old item from the cache", func(t *testing.T) {
+		c := NewCache(3)
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+		c.Set("ccc", 333)
+
+		_, ok := c.Get("bbb")
+		require.True(t, ok)
+
+		_, ok = c.Get("aaa")
+		require.True(t, ok)
+
+		c.Set("aaa", 888)
+		val, ok := c.Get("aaa")
+		require.True(t, ok)
+		require.Equal(t, 888, val)
+
+		c.Set("ddd", 444)
+
+		_, ok = c.Get("ccc")
+		require.False(t, ok)
 	})
 }
 
