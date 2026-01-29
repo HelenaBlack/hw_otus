@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"syscall"
@@ -8,13 +9,17 @@ import (
 
 // RunCmd runs a command + arguments (cmd) with environment variables from env.
 func RunCmd(cmd []string, env Environment) (returnCode int) {
+	if len(cmd) == 0 {
+		return 111
+	}
+
+	//nolint:gosec
 	command := exec.Command(cmd[0], cmd[1:]...)
 
 	command.Stdin = os.Stdin
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 
-	// Start with current environment
 	envMap := make(map[string]string)
 	for _, e := range os.Environ() {
 		if i := len(e); i > 0 {
@@ -28,7 +33,6 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 		}
 	}
 
-	// Apply envdir rules
 	for key, val := range env {
 		delete(envMap, key)
 		if val.Value != "" {
@@ -36,7 +40,6 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 		}
 	}
 
-	// Convert back to slice
 	finalEnv := make([]string, 0, len(envMap))
 	for k, v := range envMap {
 		finalEnv = append(finalEnv, k+"="+v)
@@ -49,7 +52,8 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 		return 0
 	}
 
-	if exitErr, ok := err.(*exec.ExitError); ok {
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
 		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
 			return status.ExitStatus()
 		}

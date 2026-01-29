@@ -9,7 +9,7 @@ import (
 func TestReadDir(t *testing.T) {
 	dir := t.TempDir()
 
-	err := os.WriteFile(filepath.Join(dir, "FOO"), []byte("bar \t\nbaz"), 0644)
+	err := os.WriteFile(filepath.Join(dir, "FOO"), []byte("bar \t\nbaz"), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
