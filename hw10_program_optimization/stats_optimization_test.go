@@ -49,6 +49,47 @@ func TestGetDomainStat_Time_And_Memory(t *testing.T) {
 	require.Less(t, int64(result.T), int64(timeLimit), "the program is too slow")
 	require.Less(t, mem, memoryLimit, "the program is too greedy")
 }
+func BenchmarkGetDomainStat(b *testing.B) {
+	b.StopTimer()
+
+	r, err := zip.OpenReader("testdata/users.dat.zip")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer r.Close()
+
+	if len(r.File) != 1 {
+		b.Fatal("expected 1 file in zip")
+	}
+
+	for i := 0; i < b.N; i++ {
+		data, err := r.File[0].Open()
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		b.StartTimer()
+		_, err = GetDomainStat(data, "biz")
+		b.StopTimer()
+
+		if err != nil {
+			b.Fatal(err)
+		}
+		data.Close()
+	}
+}
+
+func BenchmarkExtractEmail(b *testing.B) {
+	line := []byte(`{"ID":1,"Name":"John Doe","Username":"jdoe","Email":"john.doe@example.com","Phone":"123456789","Password":"pass","Address":"addr"}`)
+	var email string
+
+	for i := 0; i < b.N; i++ {
+		err := extractEmail(line, &email)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
 
 var expectedBizStat = DomainStat{
 	"abata.biz":         25,
