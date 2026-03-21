@@ -48,7 +48,7 @@ db-create-test:
 test-with-db: db-up
 	@echo "Waiting for database to be ready..."
 	@sleep 5
-	@docker compose exec postgres psql -U calendar -c "CREATE DATABASE IF NOT EXISTS calendar_test;" 2>/dev/null || true
+	@docker compose exec postgres psql -U calendar -c "CREATE DATABASE calendar_test;" 2>/dev/null || true
 	@make test
 	@make db-down
 
