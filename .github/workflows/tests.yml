@@ -82,6 +82,6 @@ jobs:
         run: make build
         working-directory: hw12_13_14_15_16_calendar
 
-      - name: make test
-        run: make test
+      - name: make test-with-db
+        run: make test-with-db
         working-directory: hw12_13_14_15_16_calendar
