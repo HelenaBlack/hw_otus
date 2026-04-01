@@ -3,6 +3,7 @@ package memorystorage
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app"
 	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage"
@@ -93,6 +94,61 @@ func (s *Storage) ListEvents(ctx context.Context, userID string) ([]storage.Even
 	var result []storage.Event
 	for _, e := range s.events {
 		if e.UserID == userID {
+			result = append(result, e)
+		}
+	}
+	return result, nil
+}
+
+func (s *Storage) ListEventsForDay(_ context.Context, date string) ([]storage.Event, error) {
+	// startDate в формате YYYY-MM-DD
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var result []storage.Event
+	for _, e := range s.events {
+		eventDate := time.Unix(e.StartTime, 0).Format("2006-01-02")
+		if eventDate == date {
+			result = append(result, e)
+		}
+	}
+	return result, nil
+}
+
+func (s *Storage) ListEventsForWeek(_ context.Context, startDate string) ([]storage.Event, error) {
+	// startDate в формате YYYY-MM-DD
+	t, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, err
+	}
+	end := t.AddDate(0, 0, 7)
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var result []storage.Event
+	for _, e := range s.events {
+		if e.StartTime >= t.Unix() && e.StartTime < end.Unix() {
+			result = append(result, e)
+		}
+	}
+	return result, nil
+}
+
+func (s *Storage) ListEventsForMonth(_ context.Context, startDate string) ([]storage.Event, error) {
+	// startDate в формате YYYY-MM-DD
+	t, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, err
+	}
+	end := t.AddDate(0, 1, 0)
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var result []storage.Event
+	for _, e := range s.events {
+		if e.StartTime >= t.Unix() && e.StartTime < end.Unix() {
 			result = append(result, e)
 		}
 	}

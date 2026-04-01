@@ -25,6 +25,9 @@ type Storage interface {
 	DeleteEvent(ctx context.Context, id string) error                       // Удалить событие
 	GetEvent(ctx context.Context, id string) (storage.Event, error)         // Получить событие по ID
 	ListEvents(ctx context.Context, userID string) ([]storage.Event, error) // Получить все события пользователя
+	ListEventsForDay(ctx context.Context, date string) ([]storage.Event, error)
+	ListEventsForWeek(ctx context.Context, startDate string) ([]storage.Event, error)
+	ListEventsForMonth(ctx context.Context, startDate string) ([]storage.Event, error)
 }
 
 // ErrDateBusy — ошибка, если время уже занято другим событием.
@@ -58,4 +61,19 @@ func (a *App) GetEvent(ctx context.Context, id string) (storage.Event, error) {
 // ListEvents возвращает все события пользователя.
 func (a *App) ListEvents(ctx context.Context, userID string) ([]storage.Event, error) {
 	return a.storage.ListEvents(ctx, userID)
+}
+
+// ListEventsForDay возвращает список событий на день.
+func (a *App) ListEventsForDay(ctx context.Context, date string) ([]storage.Event, error) {
+	return a.storage.ListEventsForDay(ctx, date)
+}
+
+// ListEventsForWeek возвращает список событий на неделю.
+func (a *App) ListEventsForWeek(ctx context.Context, startDate string) ([]storage.Event, error) {
+	return a.storage.ListEventsForWeek(ctx, startDate)
+}
+
+// ListEventsForMonth возвращает список событий на месяц.
+func (a *App) ListEventsForMonth(ctx context.Context, startDate string) ([]storage.Event, error) {
+	return a.storage.ListEventsForMonth(ctx, startDate)
 }
