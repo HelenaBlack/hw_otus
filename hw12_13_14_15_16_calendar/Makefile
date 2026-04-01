@@ -69,4 +69,9 @@ lint: install-lint-deps
 	golangci-lint run ./...
 
 # Объявление phony targets (целей, которые не являются файлами)
-.PHONY: build run build-img run-img version test lint db-up db-down db-down-clean db-create-test test-with-db
+.PHONY: build run build-img run-img version test lint db-up db-down db-down-clean db-create-test test-with-db generate
+
+generate:
+	protoc --go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		api/proto/calendar.proto

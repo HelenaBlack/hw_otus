@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage"
 	"github.com/google/uuid"
@@ -120,6 +121,64 @@ func (s *Storage) ListEvents(ctx context.Context, userID string) ([]storage.Even
         EXTRACT(EPOCH FROM to_timestamp(start_time))::bigint,
         EXTRACT(EPOCH FROM to_timestamp(end_time))::bigint, 
         notify_before FROM events WHERE user_id=$1`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var e storage.Event
+		var notifyBefore sql.NullInt64
+		if err := rows.Scan(
+			&e.ID,
+			&e.Title,
+			&e.Description,
+			&e.UserID,
+			&e.StartTime,
+			&e.EndTime,
+			&notifyBefore,
+		); err != nil {
+			return nil, err
+		}
+		if notifyBefore.Valid {
+			e.NotifyBefore = &notifyBefore.Int64
+		}
+		events = append(events, e)
+	}
+	return events, nil
+}
+
+func (s *Storage) ListEventsForDay(ctx context.Context, date string) ([]storage.Event, error) {
+	t, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return nil, err
+	}
+	return s.listEventsByRange(ctx, t, t.AddDate(0, 0, 1))
+}
+
+func (s *Storage) ListEventsForWeek(ctx context.Context, startDate string) ([]storage.Event, error) {
+	t, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, err
+	}
+	return s.listEventsByRange(ctx, t, t.AddDate(0, 0, 7))
+}
+
+func (s *Storage) ListEventsForMonth(ctx context.Context, startDate string) ([]storage.Event, error) {
+	t, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, err
+	}
+	return s.listEventsByRange(ctx, t, t.AddDate(0, 1, 0))
+}
+
+func (s *Storage) listEventsByRange(ctx context.Context, start, end time.Time) ([]storage.Event, error) {
+	var events []storage.Event
+	rows, err := s.db.QueryxContext(ctx,
+		`SELECT id, title, description, user_id,
+        EXTRACT(EPOCH FROM to_timestamp(start_time))::bigint,
+        EXTRACT(EPOCH FROM to_timestamp(end_time))::bigint, 
+        notify_before FROM events 
+        WHERE start_time >= $1 AND start_time < $2`, start.Unix(), end.Unix())
 	if err != nil {
 		return nil, err
 	}

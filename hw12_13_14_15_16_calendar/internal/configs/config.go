@@ -24,10 +24,11 @@ type StorageConf struct {
 	Type string `yaml:"type"` // memory или sql
 }
 
-// ServerConf содержит параметры HTTP-сервера.
+// ServerConf содержит параметры HTTP и GRPC серверов.
 type ServerConf struct {
-	Host string `yaml:"host"` // адрес
-	Port int    `yaml:"port"` // порт
+	Host     string `yaml:"host"`     // адрес
+	Port     int    `yaml:"port"`     // HTTP порт
+	GrpcPort int    `yaml:"grpcPort"` // GRPC порт
 }
 
 // DBConf содержит параметры подключения к базе данных.

@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package calendar;
+
+option go_package = "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/pkg/calendar";
+
+service CalendarService {
+    rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
+    rpc UpdateEvent(UpdateEventRequest) returns (UpdateEventResponse);
+    rpc DeleteEvent(DeleteEventRequest) returns (DeleteEventResponse);
+    rpc ListEventsForDay(ListEventsForDayRequest) returns (ListEventsResponse);
+    rpc ListEventsForWeek(ListEventsForWeekRequest) returns (ListEventsResponse);
+    rpc ListEventsForMonth(ListEventsForMonthRequest) returns (ListEventsResponse);
+}
+
+message Event {
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    string user_id = 4;
+    int64 start_time = 5;
+    int64 end_time = 6;
+    int64 notify_before = 7; // Optional can be handled by presence or special value
+}
+
+message CreateEventRequest {
+    Event event = 1;
+}
+
+message CreateEventResponse {
+    string id = 1;
+    string error = 2;
+}
+
+message UpdateEventRequest {
+    Event event = 1;
+}
+
+message UpdateEventResponse {
+    string error = 1;
+}
+
+message DeleteEventRequest {
+    string id = 1;
+}
+
+message DeleteEventResponse {
+    string error = 1;
+}
+
+message ListEventsForDayRequest {
+    string date = 1; // YYYY-MM-DD
+}
+
+message ListEventsForWeekRequest {
+    string start_date = 1; // YYYY-MM-DD
+}
+
+message ListEventsForMonthRequest {
+    string start_date = 1; // YYYY-MM-DD
+}
+
+message ListEventsResponse {
+    repeated Event events = 1;
+    string error = 2;
+}

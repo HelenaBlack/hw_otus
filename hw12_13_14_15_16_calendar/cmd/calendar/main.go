@@ -13,6 +13,7 @@ import (
 	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app"
 	config "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/configs"
 	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/logger"
+	internalgrpc "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/server/grpc"
 	internalhttp "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/server/http"
 	memorystorage "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/memory"
 	sqlstorage "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/sql"
@@ -65,29 +66,39 @@ func main() {
 
 	calendar := app.New(logg, storage)
 
-	server := internalhttp.NewServer(logg, calendar, configData.Server.Host, configData.Server.Port)
+	httpServer := internalhttp.NewServer(logg, calendar, configData.Server.Host, configData.Server.Port)
+	grpcServer := internalgrpc.NewServer(logg, calendar)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
+	// Start gRPC server
 	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+		if err := grpcServer.Start(configData.Server.Host, configData.Server.GrpcPort); err != nil {
+			logg.Error("failed to start grpc server: " + err.Error())
+			cancel()
 		}
 	}()
 
-	logg.Info("calendar is running...")
+	// Start HTTP server
+	go func() {
+		if err := httpServer.Start(ctx); err != nil {
+			logg.Error("failed to start http server: " + err.Error())
+			cancel()
+		}
+	}()
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1) //nolint:gocritic
+	logg.Info("calendar is running (HTTP and gRPC)...")
+
+	<-ctx.Done()
+	logg.Info("shutting down...")
+
+	grpcServer.Stop()
+	stopCtx, stopCancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer stopCancel()
+	if err := httpServer.Stop(stopCtx); err != nil {
+		logg.Error("failed to stop http server: " + err.Error())
 	}
 }
 
