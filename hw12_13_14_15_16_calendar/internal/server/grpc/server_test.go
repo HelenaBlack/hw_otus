@@ -60,10 +60,10 @@ func (m *MockApplication) ListEventsForMonth(ctx context.Context, startDate stri
 
 type MockLogger struct{}
 
-func (m *MockLogger) Info(msg string)  {}
-func (m *MockLogger) Error(msg string) {}
-func (m *MockLogger) Warn(msg string)  {}
-func (m *MockLogger) Debug(msg string) {}
+func (m *MockLogger) Info(string)  {}
+func (m *MockLogger) Error(string) {}
+func (m *MockLogger) Warn(string)  {}
+func (m *MockLogger) Debug(string) {}
 
 func TestCreateEvent(t *testing.T) {
 	lis := bufconn.Listen(1024 * 1024)
@@ -79,7 +79,7 @@ func TestCreateEvent(t *testing.T) {
 	defer s.Stop()
 
 	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "bufnet",
+	conn, err := grpc.NewClient("passthrough://bufnet",
 		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
 			return lis.Dial()
 		}),

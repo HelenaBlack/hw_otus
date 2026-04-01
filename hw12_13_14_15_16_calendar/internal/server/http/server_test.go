@@ -59,10 +59,10 @@ func (m *MockApplication) ListEventsForMonth(ctx context.Context, startDate stri
 
 type MockLogger struct{}
 
-func (m *MockLogger) Info(msg string)  {}
-func (m *MockLogger) Error(msg string) {}
-func (m *MockLogger) Warn(msg string)  {}
-func (m *MockLogger) Debug(msg string) {}
+func (m *MockLogger) Info(string)  {}
+func (m *MockLogger) Error(string) {}
+func (m *MockLogger) Warn(string)  {}
+func (m *MockLogger) Debug(string) {}
 
 func TestHandleCreate(t *testing.T) {
 	mockApp := new(MockApplication)

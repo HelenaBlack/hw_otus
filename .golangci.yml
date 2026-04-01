@@ -32,6 +32,7 @@ linters-settings:
           - github.com/jmoiron/sqlx
           - google.golang.org/grpc
           - google.golang.org/grpc/reflection
+          - google.golang.org/grpc/test/bufconn
       Test:
         files:
           - $test
@@ -43,6 +44,7 @@ linters-settings:
           - github.com/lib/pq
           - google.golang.org/grpc
           - google.golang.org/grpc/reflection
+          - google.golang.org/grpc/test/bufconn
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/logger
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/configs
