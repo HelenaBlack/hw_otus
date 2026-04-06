@@ -1,7 +1,6 @@
 # Собираем в гошке
 FROM golang:1.23 as build
 
-ENV BIN_FILE /opt/calendar/calendar-app
 ENV CODE_DIR /go/src/
 
 WORKDIR ${CODE_DIR}
@@ -18,7 +17,15 @@ COPY . ${CODE_DIR}
 ARG LDFLAGS
 RUN CGO_ENABLED=0 go build \
         -ldflags "$LDFLAGS" \
-        -o ${BIN_FILE} cmd/calendar/*
+        -o /opt/calendar/calendar cmd/calendar/*
+
+RUN CGO_ENABLED=0 go build \
+        -ldflags "$LDFLAGS" \
+        -o /opt/calendar/calendar_scheduler cmd/calendar_scheduler/*
+
+RUN CGO_ENABLED=0 go build \
+        -ldflags "$LDFLAGS" \
+        -o /opt/calendar/calendar_sender cmd/calendar_sender/*
 
 # На выходе тонкий образ
 FROM alpine:3.9
@@ -27,12 +34,13 @@ LABEL ORGANIZATION="OTUS Online Education"
 LABEL SERVICE="calendar"
 LABEL MAINTAINERS="student@otus.ru"
 
-ENV BIN_FILE "/opt/calendar/calendar-app"
-COPY --from=build ${BIN_FILE} ${BIN_FILE}
+COPY --from=build /opt/calendar/calendar /opt/calendar/calendar
+COPY --from=build /opt/calendar/calendar_scheduler /opt/calendar/calendar_scheduler
+COPY --from=build /opt/calendar/calendar_sender /opt/calendar/calendar_sender
 
 ENV CONFIG_FILE /etc/calendar/config.yaml
 COPY ./configs/config.yaml ${CONFIG_FILE}
 COPY ./migrations /migrations
-WORKDIR /migrations
+WORKDIR /opt/calendar
 
-CMD ${BIN_FILE} -config ${CONFIG_FILE}
+CMD ["/opt/calendar/calendar", "-config", "/etc/calendar/config.yaml"]

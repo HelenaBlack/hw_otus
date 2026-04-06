@@ -8,4 +8,5 @@ type Event struct {
 	StartTime    int64  // время начала события (Unix timestamp)
 	EndTime      int64  // время окончания события (Unix timestamp)
 	NotifyBefore *int64 // количество секунд до события для уведомления (опционально)
+	NotifySent   bool   // флаг, что уведомление уже отправлено
 }

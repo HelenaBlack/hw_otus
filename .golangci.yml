@@ -26,6 +26,7 @@ linters-settings:
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/memory
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/sql
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/pkg/calendar
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/rabbitmq
           - github.com/google/uuid
           - github.com/pressly/goose/v3
           - gopkg.in/yaml.v2
@@ -33,6 +34,7 @@ linters-settings:
           - google.golang.org/grpc
           - google.golang.org/grpc/reflection
           - google.golang.org/grpc/test/bufconn
+          - github.com/rabbitmq/amqp091-go
       Test:
         files:
           - $test
@@ -45,6 +47,7 @@ linters-settings:
           - google.golang.org/grpc
           - google.golang.org/grpc/reflection
           - google.golang.org/grpc/test/bufconn
+          - github.com/rabbitmq/amqp091-go
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/app
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/logger
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/configs
@@ -54,6 +57,7 @@ linters-settings:
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/memory
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/storage/sql
           - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/pkg/calendar
+          - github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/rabbitmq
 
 
 issues:

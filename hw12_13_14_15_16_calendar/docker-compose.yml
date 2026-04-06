@@ -21,6 +21,20 @@ services:
       timeout: 5s
       retries: 5
 
+  # RabbitMQ для очереди уведомлений
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: calendar-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP порт
+      - "15672:15672" # Management UI
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 # Именованные тома для постоянного хранения данных
 volumes:
   pgdata:  # том для данных PostgreSQL 

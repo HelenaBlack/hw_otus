@@ -8,10 +8,13 @@ import (
 
 // Config описывает структуру основного конфига приложения.
 type Config struct {
-	Logger  LoggerConf  `yaml:"logger"`  // параметры логирования
-	Storage StorageConf `yaml:"storage"` // параметры хранилища
-	Server  ServerConf  `yaml:"server"`  // параметры HTTP-сервера
-	DB      DBConf      `yaml:"db"`      // параметры БД
+	Logger    LoggerConf    `yaml:"logger"`    // параметры логирования
+	Storage   StorageConf   `yaml:"storage"`   // параметры хранилища
+	Server    ServerConf    `yaml:"server"`    // параметры HTTP-сервера
+	DB        DBConf        `yaml:"db"`        // параметры БД
+	RabbitMQ  RabbitMQConf  `yaml:"rabbitmq"`  // параметры RabbitMQ
+	Scheduler SchedulerConf `yaml:"scheduler"` // параметры планировщика
+	Sender    SenderConf    `yaml:"sender"`    // параметры рассыльщика
 }
 
 // LoggerConf содержит параметры логирования.
@@ -38,6 +41,25 @@ type DBConf struct {
 	User     string `yaml:"user"`     // пользователь
 	Password string `yaml:"password"` // пароль
 	DBName   string `yaml:"dbname"`   // имя базы
+}
+
+// RabbitMQConf содержит параметры подключения к RabbitMQ.
+type RabbitMQConf struct {
+	Host     string `yaml:"host"`     // адрес
+	Port     int    `yaml:"port"`     // порт
+	User     string `yaml:"user"`     // пользователь
+	Password string `yaml:"password"` // пароль
+	Queue    string `yaml:"queue"`    // имя очереди
+}
+
+// SchedulerConf содержит параметры планировщика.
+type SchedulerConf struct {
+	ScanInterval int `yaml:"scanInterval"` // интервал сканирования БД (сек)
+}
+
+// SenderConf содержит параметры рассыльщика.
+type SenderConf struct {
+	WorkerCount int `yaml:"workerCount"` // количество воркеров
 }
 
 // NewConfigFromFile читает и парсит YAML-конфиг из файла.

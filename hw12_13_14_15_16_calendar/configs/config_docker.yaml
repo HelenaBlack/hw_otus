@@ -1,4 +1,4 @@
-# Конфигурационный файл для сервиса Календарь
+# Конфигурационный файл для сервиса Календарь (Docker-окружение)
 # Формат: YAML
 
 logger:
@@ -13,18 +13,18 @@ server:
   # Адрес и порт для серверов
   host: 0.0.0.0
   port: 8080
-  grpc_port: 50051
+  grpcPort: 50051
 
 db:
   # Настройки подключения к базе данных (используется, если storage.type = sql)
-  host: localhost
+  host: postgres
   port: 5432
   user: calendar
   password: calendar
   dbname: calendar
 
 rabbitmq:
-  host: localhost
+  host: rabbitmq
   port: 5672
   user: guest
   password: guest
