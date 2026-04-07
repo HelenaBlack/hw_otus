@@ -28,6 +28,9 @@ type Storage interface {
 	ListEventsForDay(ctx context.Context, date string) ([]storage.Event, error)
 	ListEventsForWeek(ctx context.Context, startDate string) ([]storage.Event, error)
 	ListEventsForMonth(ctx context.Context, startDate string) ([]storage.Event, error)
+	GetEventsForNotification(ctx context.Context, now int64) ([]storage.Event, error)
+	UpdateNotificationSent(ctx context.Context, id string) error
+	DeleteOldEvents(ctx context.Context, olderThan int64) error
 }
 
 // ErrDateBusy — ошибка, если время уже занято другим событием.

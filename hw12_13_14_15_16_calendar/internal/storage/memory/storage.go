@@ -2,6 +2,7 @@ package memorystorage
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -153,4 +154,43 @@ func (s *Storage) ListEventsForMonth(_ context.Context, startDate string) ([]sto
 		}
 	}
 	return result, nil
+}
+
+func (s *Storage) GetEventsForNotification(_ context.Context, now int64) ([]storage.Event, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var result []storage.Event
+	for _, e := range s.events {
+		if !e.NotifySent && e.NotifyBefore != nil {
+			if e.StartTime-*e.NotifyBefore <= now && e.StartTime > now {
+				result = append(result, e)
+			}
+		}
+	}
+	return result, nil
+}
+
+func (s *Storage) UpdateNotificationSent(_ context.Context, id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if e, ok := s.events[id]; ok {
+		e.NotifySent = true
+		s.events[id] = e
+		return nil
+	}
+	return errors.New("event not found")
+}
+
+func (s *Storage) DeleteOldEvents(_ context.Context, olderThan int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for id, e := range s.events {
+		if e.StartTime < olderThan {
+			delete(s.events, id)
+		}
+	}
+	return nil
 }

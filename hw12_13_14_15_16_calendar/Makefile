@@ -11,7 +11,9 @@ LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%d
 
 # Сборка исполняемого файла с внедренной информацией о версии
 build:
-	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
+	go build -v -o ./bin/calendar -ldflags "$(LDFLAGS)" ./cmd/calendar
+	go build -v -o ./bin/calendar_scheduler -ldflags "$(LDFLAGS)" ./cmd/calendar_scheduler
+	go build -v -o ./bin/calendar_sender -ldflags "$(LDFLAGS)" ./cmd/calendar_sender
 
 # Сборка и запуск приложения с конфигурацией по умолчанию
 run: build
@@ -27,6 +29,22 @@ build-img:
 # Сборка и запуск Docker образа
 run-img: build-img
 	docker run $(DOCKER_IMG)
+
+# Запуск всех микросервисов в Docker
+up:
+	docker compose -f docker-compose.full.yml up -d --build
+
+# Остановка всех микросервисов
+down:
+	docker compose -f docker-compose.full.yml down
+
+# Остановка с удалением данных
+down-clean:
+	docker compose -f docker-compose.full.yml down -v
+
+# Просмотр логов всех сервисов
+logs:
+	docker compose -f docker-compose.full.yml logs -f
 
 # Запуск только базы данных PostgreSQL в Docker
 db-up:
@@ -69,7 +87,7 @@ lint: install-lint-deps
 	golangci-lint run ./...
 
 # Объявление phony targets (целей, которые не являются файлами)
-.PHONY: build run build-img run-img version test lint db-up db-down db-down-clean db-create-test test-with-db generate
+.PHONY: build run build-img run-img version test lint db-up db-down db-down-clean db-create-test test-with-db generate up down down-clean logs
 
 generate:
 	protoc --go_out=. --go_opt=paths=source_relative \
