@@ -1,40 +1,106 @@
-# Docker Compose конфигурация только для базы данных PostgreSQL
-# Используется для разработки и тестирования
 version: '3.8'
+
 services:
-  # Сервис PostgreSQL для хранения данных
   postgres:
     image: postgres:15
     container_name: calendar-postgres
     environment:
-      POSTGRES_USER: calendar      # пользователь базы данных
-      POSTGRES_PASSWORD: calendar  # пароль пользователя
-      POSTGRES_DB: calendar        # имя базы данных по умолчанию
+      POSTGRES_USER: calendar
+      POSTGRES_PASSWORD: calendar
+      POSTGRES_DB: calendar
     ports:
-      - "5432:5432"                # проброс порта PostgreSQL
-    restart: unless-stopped        # автоматический перезапуск
-    volumes:
-      - pgdata:/var/lib/postgresql/data  # постоянное хранение данных
+      - "5434:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U calendar"]  # проверка готовности БД
+      test: ["CMD-SHELL", "pg_isready -U calendar"]
       interval: 5s
       timeout: 5s
       retries: 5
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
-  # RabbitMQ для очереди уведомлений
   rabbitmq:
     image: rabbitmq:3-management
     container_name: calendar-rabbitmq
     ports:
-      - "5672:5672"   # AMQP порт
-      - "15672:15672" # Management UI
-    restart: unless-stopped
+      - "5672:5672"
+      - "15672:15672"
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-# Именованные тома для постоянного хранения данных
+  migrate:
+    build:
+      context: .
+      dockerfile: ./build/migrate.Dockerfile
+    container_name: calendar-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    command: -dir /migrations postgres "host=postgres port=5432 user=calendar password=calendar dbname=calendar sslmode=disable" up
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=calendar
+      - DB_PASSWORD=calendar
+      - DB_NAME=calendar
+
+  calendar:
+    build:
+      context: .
+      dockerfile: ./build/calendar.Dockerfile
+    container_name: calendar-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8888:8080"
+      - "50051:50051"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=calendar
+      - DB_PASSWORD=calendar
+      - DB_NAME=calendar
+      - RABBITMQ_HOST=rabbitmq
+      - STORAGE_TYPE=sql
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: ./build/scheduler.Dockerfile
+    container_name: calendar-scheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=calendar
+      - DB_PASSWORD=calendar
+      - DB_NAME=calendar
+      - RABBITMQ_HOST=rabbitmq
+      - STORAGE_TYPE=sql
+
+  sender:
+    build:
+      context: .
+      dockerfile: ./build/sender.Dockerfile
+    container_name: calendar-sender
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+
 volumes:
-  pgdata:  # том для данных PostgreSQL 
+  pgdata:

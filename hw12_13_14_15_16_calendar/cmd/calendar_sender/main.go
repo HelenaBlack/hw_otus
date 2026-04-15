@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	config "github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/configs"
 	"github.com/HelenaBlack/hw_otus/hw12_13_14_15_calendar/internal/logger"
@@ -75,6 +76,16 @@ func main() {
 						"worker %d got event: %s starting at %d for user: %s",
 						id, notif.Title, notif.StartTime, notif.UserID,
 					))
+
+					// Report status
+					status := storage.NotificationStatus{
+						EventID: notif.EventID,
+						SentAt:  time.Now().Unix(),
+						Success: true,
+					}
+					if err := rmqClient.PublishToQueue(ctx, "notification_status", status); err != nil {
+						l.Error("failed to publish status: " + err.Error())
+					}
 
 					_ = d.Ack(false)
 				}

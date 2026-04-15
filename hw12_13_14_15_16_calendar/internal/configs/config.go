@@ -1,9 +1,7 @@
 package config
 
 import (
-	"os"
-
-	"gopkg.in/yaml.v2"
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 // Config описывает структуру основного конфига приложения.
@@ -19,60 +17,58 @@ type Config struct {
 
 // LoggerConf содержит параметры логирования.
 type LoggerConf struct {
-	Level string `yaml:"level"` // error, warn, info, debug
+	Level string `yaml:"level" env:"LOGGER_LEVEL" env-default:"info"` // error, warn, info, debug
 }
 
 // StorageConf описывает тип используемого хранилища.
 type StorageConf struct {
-	Type string `yaml:"type"` // memory или sql
+	Type string `yaml:"type" env:"STORAGE_TYPE" env-default:"memory"` // memory или sql
 }
 
 // ServerConf содержит параметры HTTP и GRPC серверов.
 type ServerConf struct {
-	Host     string `yaml:"host"`     // адрес
-	Port     int    `yaml:"port"`     // HTTP порт
-	GrpcPort int    `yaml:"grpcPort"` // GRPC порт
+	Host     string `yaml:"host" env:"SERVER_HOST" env-default:"0.0.0.0"`
+	Port     int    `yaml:"port" env:"SERVER_PORT" env-default:"8080"`
+	GrpcPort int    `yaml:"grpcPort" env:"SERVER_GRPC_PORT" env-default:"50051"`
 }
 
 // DBConf содержит параметры подключения к базе данных.
 type DBConf struct {
-	Host     string `yaml:"host"`     // адрес БД
-	Port     int    `yaml:"port"`     // порт БД
-	User     string `yaml:"user"`     // пользователь
-	Password string `yaml:"password"` // пароль
-	DBName   string `yaml:"dbname"`   // имя базы
+	Host     string `yaml:"host" env:"DB_HOST" env-default:"localhost"`
+	Port     int    `yaml:"port" env:"DB_PORT" env-default:"5432"`
+	User     string `yaml:"user" env:"DB_USER" env-default:"calendar"`
+	Password string `yaml:"password" env:"DB_PASSWORD"`
+	DBName   string `yaml:"dbname" env:"DB_NAME" env-default:"calendar"`
 }
 
 // RabbitMQConf содержит параметры подключения к RabbitMQ.
 type RabbitMQConf struct {
-	Host     string `yaml:"host"`     // адрес
-	Port     int    `yaml:"port"`     // порт
-	User     string `yaml:"user"`     // пользователь
-	Password string `yaml:"password"` // пароль
-	Queue    string `yaml:"queue"`    // имя очереди
+	Host     string `yaml:"host" env:"RABBITMQ_HOST" env-default:"localhost"`
+	Port     int    `yaml:"port" env:"RABBITMQ_PORT" env-default:"5672"`
+	User     string `yaml:"user" env:"RABBITMQ_USER" env-default:"guest"`
+	Password string `yaml:"password" env:"RABBITMQ_PASSWORD" env-default:"guest"`
+	Queue    string `yaml:"queue" env:"RABBITMQ_QUEUE" env-default:"calendar"`
 }
 
 // SchedulerConf содержит параметры планировщика.
 type SchedulerConf struct {
-	ScanInterval int `yaml:"scanInterval"` // интервал сканирования БД (сек)
+	ScanInterval int `yaml:"scanInterval" env:"SCHEDULER_SCAN_INTERVAL" env-default:"5"` // интервал сканирования БД (сек)
 }
 
 // SenderConf содержит параметры рассыльщика.
 type SenderConf struct {
-	WorkerCount int `yaml:"workerCount"` // количество воркеров
+	WorkerCount int `yaml:"workerCount" env:"SENDER_WORKER_COUNT" env-default:"5"` // количество воркеров
 }
 
 // NewConfigFromFile читает и парсит YAML-конфиг из файла.
+// Если путь к файлу пустой, читает только из переменных окружения.
 func NewConfigFromFile(path string) (Config, error) {
 	var cfg Config
-	f, err := os.Open(path)
-	if err != nil {
-		return cfg, err
+	var err error
+	if path != "" {
+		err = cleanenv.ReadConfig(path, &cfg)
+	} else {
+		err = cleanenv.ReadEnv(&cfg)
 	}
-	defer func() { _ = f.Close() }()
-	dec := yaml.NewDecoder(f)
-	if err := dec.Decode(&cfg); err != nil {
-		return cfg, err
-	}
-	return cfg, nil
+	return cfg, err
 }

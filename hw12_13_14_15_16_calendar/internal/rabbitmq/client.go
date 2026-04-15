@@ -62,16 +62,32 @@ func NewClient(user, password, host string, port int, queueName string) (*Client
 }
 
 func (c *Client) Publish(ctx context.Context, msg interface{}) error {
+	return c.PublishToQueue(ctx, c.queue, msg)
+}
+
+func (c *Client) PublishToQueue(ctx context.Context, queue string, msg interface{}) error {
 	body, err := json.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal message: %w", err)
 	}
 
+	_, err = c.ch.QueueDeclare(
+		queue, // name
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		return fmt.Errorf("failed to declare queue %s: %w", queue, err)
+	}
+
 	return c.ch.PublishWithContext(ctx,
-		"",      // exchange
-		c.queue, // routing key
-		false,   // mandatory
-		false,   // immediate
+		"",    // exchange
+		queue, // routing key
+		false, // mandatory
+		false, // immediate
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
