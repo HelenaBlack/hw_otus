@@ -1,0 +1,78 @@
+services:
+  test-postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: calendar
+      POSTGRES_PASSWORD: calendar
+      POSTGRES_DB: calendar
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calendar"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  test-rabbitmq:
+    image: rabbitmq:3-management
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  test-migrate:
+    build:
+      context: .
+      dockerfile: ./build/migrate.Dockerfile
+    volumes:
+      - ./migrations:/migrations
+    environment:
+      - DB_HOST=test-postgres
+    command: -dir /migrations postgres "host=test-postgres port=5432 user=calendar password=calendar dbname=calendar sslmode=disable" up
+
+  test-calendar:
+    build:
+      context: .
+      dockerfile: ./build/calendar.Dockerfile
+    environment:
+      - DB_HOST=test-postgres
+      - DB_PORT=5432
+      - DB_USER=calendar
+      - DB_PASSWORD=calendar
+      - DB_NAME=calendar
+      - RABBITMQ_HOST=test-rabbitmq
+      - STORAGE_TYPE=sql
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/events_for_day?date=2024-01-01 || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  test-scheduler:
+    build:
+      context: .
+      dockerfile: ./build/scheduler.Dockerfile
+    environment:
+      - DB_HOST=test-postgres
+      - DB_PORT=5432
+      - DB_USER=calendar
+      - DB_PASSWORD=calendar
+      - DB_NAME=calendar
+      - RABBITMQ_HOST=test-rabbitmq
+      - STORAGE_TYPE=sql
+      - SCHEDULER_SCAN_INTERVAL=1
+
+  test-sender:
+    build:
+      context: .
+      dockerfile: ./build/sender.Dockerfile
+    environment:
+      - RABBITMQ_HOST=test-rabbitmq
+
+  tests:
+    image: golang:1.23-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - WAIT_HOSTS=test-calendar:8080,test-rabbitmq:5672
+    command: sh -c "go mod download && go test -v ./tests/integration/..."

@@ -32,23 +32,38 @@ run-img: build-img
 
 # Запуск всех микросервисов в Docker
 up:
-	docker compose -f docker-compose.full.yml up -d --build
+	docker compose up -d --build
 
 # Остановка всех микросервисов
 down:
-	docker compose -f docker-compose.full.yml down
+	docker compose down
 
 # Остановка с удалением данных
 down-clean:
-	docker compose -f docker-compose.full.yml down -v
+	docker compose down -v
 
 # Просмотр логов всех сервисов
 logs:
-	docker compose -f docker-compose.full.yml logs -f
+	docker compose logs -f
+
+# Запуск интеграционных тестов
+integration-tests:
+	docker compose -f docker-compose.test.yml -p calendar-test down -v || true
+	docker compose -f docker-compose.test.yml -p calendar-test up -d --build --wait test-postgres test-rabbitmq
+	docker compose -f docker-compose.test.yml -p calendar-test run --rm test-migrate
+	docker compose -f docker-compose.test.yml -p calendar-test up -d --build --wait test-calendar test-sender test-scheduler
+	docker compose -f docker-compose.test.yml -p calendar-test run --rm tests
+	docker compose -f docker-compose.test.yml -p calendar-test down -v
+
+
+
+
+
+
 
 # Запуск только базы данных PostgreSQL в Docker
 db-up:
-	docker compose up -d
+	docker compose up -d postgres rabbitmq
 
 # Остановка базы данных PostgreSQL
 db-down:

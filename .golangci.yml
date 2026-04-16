@@ -35,11 +35,13 @@ linters-settings:
           - google.golang.org/grpc/reflection
           - google.golang.org/grpc/test/bufconn
           - github.com/rabbitmq/amqp091-go
+          - github.com/ilyakaznacheev/cleanenv
       Test:
         files:
           - $test
         allow:
           - $gostd
+          - github.com/google/uuid
           - github.com/stretchr/testify
           - golang.org/x/example/hello
           - github.com/pressly/goose/v3

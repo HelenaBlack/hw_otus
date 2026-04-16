@@ -34,13 +34,17 @@ LABEL ORGANIZATION="OTUS Online Education"
 LABEL SERVICE="calendar"
 LABEL MAINTAINERS="student@otus.ru"
 
-COPY --from=build /opt/calendar/calendar /opt/calendar/calendar
-COPY --from=build /opt/calendar/calendar_scheduler /opt/calendar/calendar_scheduler
-COPY --from=build /opt/calendar/calendar_sender /opt/calendar/calendar_sender
+ENV BIN_FILE_CALENDAR /opt/calendar/calendar
+ENV BIN_FILE_SCHEDULER /opt/calendar/calendar_scheduler
+ENV BIN_FILE_SENDER /opt/calendar/calendar_sender
+
+COPY --from=build /opt/calendar/calendar ${BIN_FILE_CALENDAR}
+COPY --from=build /opt/calendar/calendar_scheduler ${BIN_FILE_SCHEDULER}
+COPY --from=build /opt/calendar/calendar_sender ${BIN_FILE_SENDER}
 
 ENV CONFIG_FILE /etc/calendar/config.yaml
 COPY ./configs/config.yaml ${CONFIG_FILE}
 COPY ./migrations /migrations
 WORKDIR /opt/calendar
 
-CMD ["/opt/calendar/calendar", "-config", "/etc/calendar/config.yaml"]
+CMD ["${BIN_FILE_CALENDAR}", "-config", "/etc/calendar/config.yaml"]
