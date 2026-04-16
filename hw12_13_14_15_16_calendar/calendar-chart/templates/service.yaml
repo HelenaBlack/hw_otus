@@ -1,0 +1,18 @@
+{{- if .Values.api.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "calendar-chart.fullname" . }}-api
+  labels:
+    {{- include "calendar-chart.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.api.service.type }}
+  ports:
+    - port: {{ .Values.api.service.port }}
+      targetPort: {{ .Values.api.service.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "calendar-chart.name" . }}-api
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
