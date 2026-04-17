@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "calendar-chart.fullname" . }}-migrations
+  labels:
+    {{- include "calendar-chart.labels" . | nindent 4 }}
+data:
+  20240713210000_create_events.sql: |
+    -- +goose Up
+    CREATE TABLE IF NOT EXISTS events (
+        id UUID PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        user_id TEXT NOT NULL,
+        start_time bigint NOT NULL,
+        end_time bigint NOT NULL,
+        notify_before INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS idx_events_user_id ON events(user_id);
+    CREATE INDEX IF NOT EXISTS idx_events_start_time ON events(start_time);
+
+    -- +goose Down
+    DROP INDEX IF EXISTS idx_events_start_time;
+    DROP INDEX IF EXISTS idx_events_user_id;
+    DROP TABLE IF EXISTS events;
+  20260401000000_add_notify_sent.sql: |
+    -- +goose Up
+    ALTER TABLE events ADD COLUMN notify_sent BOOLEAN DEFAULT FALSE;
+
+    -- +goose Down
+    ALTER TABLE events DROP COLUMN notify_sent;
